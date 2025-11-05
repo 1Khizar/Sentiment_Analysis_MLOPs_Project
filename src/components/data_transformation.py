@@ -14,6 +14,7 @@ for pkg in ['punkt', 'stopwords', 'wordnet']:
     nltk.download(pkg, quiet=True)
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.stem import WordNetLemmatizer
 lemmatizer =  WordNetLemmatizer()
 
@@ -57,6 +58,8 @@ class DataTransformation:
             
             df['text'] = df['text'].apply(self.preprocess_text)
             
+            df = df[df['text'].str.strip().astype(bool)]
+            
             train_data, test_data=train_test_split(df, test_size=0.2, random_state=42) 
             
             train_data['sentiment'] = label_encoder.fit_transform(train_data['sentiment'])
@@ -67,9 +70,9 @@ class DataTransformation:
             
             os.makedirs("src/model", exist_ok=True)
             save_obj(file_path="src/model/label_encoder.pkl",obj=label_encoder)
-            
+
             logging.info("The dataset is cleaned now.")
-                         
+            
             return train_data, test_data
         except Exception as e:
             raise CustomerException(e, sys)
@@ -77,6 +80,8 @@ class DataTransformation:
     def save_preprocessd_datasets(self, preprocessed_train_df, preprocessed_test_df):
         try:
             print("Inside the saving preprocess dataset files function")
+            preprocessed_train_df.dropna(subset=['text', 'sentiment'], inplace=True)
+            preprocessed_test_df.dropna(subset=['text', 'sentiment'], inplace=True)
             
             os.makedirs(self.output_file_path, exist_ok=True)
 
